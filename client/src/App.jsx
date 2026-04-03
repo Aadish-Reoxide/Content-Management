@@ -5,11 +5,11 @@ import {
   Box,
   Typography,
   Button,
-  Alert,
   CircularProgress,
   createTheme,
   ThemeProvider,
   CssBaseline,
+  TextField,
 } from '@mui/material';
 import BoltIcon from '@mui/icons-material/Bolt';
 import { Toaster, toast } from 'react-hot-toast';
@@ -28,23 +28,22 @@ export const useColorMode = () => useContext(ColorModeContext);
 const Generator = () => {
   const [platform, setPlatform] = useState('linkedin');
   const [tone, setTone] = useState('professional');
+  const [topic, setTopic] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleGenerate = async () => {
     setLoading(true);
     setResult(null);
-
     const toastId = toast.loading('Connecting to Ollama...');
-
     try {
       setTimeout(() => toast.loading('AI is writing content...', { id: toastId }), 2000);
-      const data = await generateContent(platform, tone);
+      const data = await generateContent(platform, tone, topic);
       setResult(data);
-      toast.success(`${platform.charAt(0).toUpperCase() + platform.slice(1)} content generated!`, {
-        id: toastId,
-        duration: 3000,
-      });
+      toast.success(
+        `${platform.charAt(0).toUpperCase() + platform.slice(1)} content generated!`,
+        { id: toastId, duration: 3000 }
+      );
     } catch (err) {
       toast.error(
         err?.response?.data?.error || 'Something went wrong. Is Ollama running?',
@@ -57,18 +56,48 @@ const Generator = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      {/* Header */}
       <Box>
         <Typography variant="h6" fontWeight={800}>
           ⚡ Content Generator
         </Typography>
         <Typography fontSize={13} color="text.secondary" mt={0.3}>
-          Select a platform and tone, then generate AI-powered content instantly.
+          Select a platform and tone, optionally add a topic, then generate content.
         </Typography>
       </Box>
 
+      {/* Platform Selector */}
       <PlatformSelector selected={platform} onSelect={setPlatform} />
+
+      {/* Tone Selector */}
       <ToneSelector selected={tone} onSelect={setTone} />
 
+      {/* Optional Topic Input */}
+      <Box>
+        <Typography fontSize={13} fontWeight={600} color="text.secondary" mb={1.5}>
+          Topic <span style={{ fontWeight: 400 }}>(optional)</span>
+        </Typography>
+        <TextField
+          fullWidth
+          size="small"
+          value={topic}
+          onChange={(e) => setTopic(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && !loading && handleGenerate()}
+          placeholder="e.g. India's carbon market hitting $1B valuation by 2026..."
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '12px',
+              fontSize: 14,
+              '&.Mui-focused fieldset': { borderColor: '#16a34a' },
+            },
+          }}
+        />
+        <Typography fontSize={11} color="text.secondary" mt={0.8}>
+          Leave blank to generate general Reoxide brand content.
+        </Typography>
+      </Box>
+
+      {/* Generate Button */}
       <Button
         variant="contained"
         startIcon={loading ? null : <BoltIcon />}
@@ -93,6 +122,7 @@ const Generator = () => {
         )}
       </Button>
 
+      {/* Loading message */}
       {loading && (
         <Box sx={{ textAlign: 'center', py: 4 }}>
           <Typography fontWeight={600}>AI is generating content...</Typography>
@@ -102,10 +132,12 @@ const Generator = () => {
         </Box>
       )}
 
+      {/* Result */}
       {result && !loading && (
         <ContentResult
           platform={result.platform}
           tone={tone}
+          topic={topic}
           content={result.content}
         />
       )}
@@ -114,9 +146,7 @@ const Generator = () => {
 };
 
 const AppShell = () => {
-  const [mode, setMode] = useState(() => {
-    return localStorage.getItem('colorMode') || 'light';
-  });
+  const [mode, setMode] = useState(() => localStorage.getItem('colorMode') || 'light');
 
   const colorMode = useMemo(
     () => ({
@@ -162,7 +192,6 @@ const AppShell = () => {
     <ColorModeContext.Provider value={colorMode}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        {/* Toast container — adapts to dark/light */}
         <Toaster
           position="top-right"
           toastOptions={{
@@ -174,12 +203,8 @@ const AppShell = () => {
               fontSize: '14px',
               fontWeight: 500,
             },
-            success: {
-              iconTheme: { primary: '#16a34a', secondary: '#fff' },
-            },
-            error: {
-              iconTheme: { primary: '#ef4444', secondary: '#fff' },
-            },
+            success: { iconTheme: { primary: '#16a34a', secondary: '#fff' } },
+            error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
           }}
         />
         <BrowserRouter>
@@ -198,12 +223,10 @@ const AppShell = () => {
   );
 };
 
-const App = () => {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <AppShell />
-    </QueryClientProvider>
-  );
-};
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <AppShell />
+  </QueryClientProvider>
+);
 
 export default App;

@@ -13,7 +13,7 @@ const callOllama = async (prompt) => {
     });
     return res.data.response;
   } catch (err) {
-    throw new Error('Ollama not running');
+    throw new Error('Ollama is not running. Start it with: ollama serve');
   }
 };
 
@@ -23,20 +23,27 @@ const TONE_INSTRUCTIONS = {
   bold: 'Use a punchy, high-energy, and provocative tone. Be direct, confident, and attention-grabbing.',
 };
 
-const generateForPlatform = async (platform, tone = 'professional') => {
+const generateForPlatform = async (platform, tone = 'professional', topic = null) => {
   const toneInstruction = TONE_INSTRUCTIONS[tone] || TONE_INSTRUCTIONS.professional;
+
+  // If user provided a topic use it, otherwise fall back to default Reoxide context
+  const topicContext = topic && topic.trim().length > 0
+    ? `The specific topic to write about is: "${topic.trim()}". Make sure the content is focused on this topic while keeping Reoxide as the brand context.`
+    : `Write about Reoxide's mission to make carbon credit trading transparent and accessible in India. Use general brand messaging.`;
 
   const prompts = {
     linkedin: `
-You are a content writer for Reoxide, a carbon credit marketplace based in India.
+You are a professional content writer for Reoxide, a carbon credit marketplace based in India.
 Reoxide connects carbon credit buyers and sellers on a transparent, tech-driven platform.
 
 Tone instruction: ${toneInstruction}
+Topic: ${topicContext}
 
 Write a 150-word LinkedIn post about Reoxide and the growing carbon credit market in India.
 
 Rules:
 - Follow the tone instruction strictly
+- Stay focused on the topic provided
 - Highlight the opportunity for buyers and sellers
 - End with a clear call to action to join Reoxide
 - Max 3 hashtags at the end
@@ -47,11 +54,13 @@ You are a writer for Reoxide, a carbon credit marketplace based in India.
 Reoxide connects carbon credit buyers and sellers on a transparent, tech-driven platform.
 
 Tone instruction: ${toneInstruction}
+Topic: ${topicContext}
 
 Write a 600-word Medium article educating readers about carbon credits and how Reoxide is solving the trust and accessibility problem in the carbon market.
 
 Rules:
 - Follow the tone instruction strictly
+- Stay focused on the topic provided
 - Start with a catchy headline
 - Use subheadings to break sections
 - No promotional language — educate first
@@ -63,11 +72,13 @@ You are the founder of Reoxide, a carbon credit marketplace based in India.
 Reoxide connects carbon credit buyers and sellers on a transparent, tech-driven platform.
 
 Tone instruction: ${toneInstruction}
+Topic: ${topicContext}
 
 Write a 400-word personal Substack newsletter sharing a behind-the-scenes look at why you built Reoxide and what you are learning about the carbon market.
 
 Rules:
 - Follow the tone instruction strictly
+- Stay focused on the topic provided
 - Start with a personal observation or moment that inspired Reoxide
 - Share honest lessons and insider perspective
 - No formal subheadings — flowing narrative only
@@ -78,11 +89,13 @@ You are the founder of Reoxide, a carbon credit marketplace based in India.
 Reoxide connects carbon credit buyers and sellers on a transparent, tech-driven platform.
 
 Tone instruction: ${toneInstruction}
+Topic: ${topicContext}
 
 Write a 5-tweet thread on X (Twitter) about why carbon credits are the future and how Reoxide is building the infrastructure for it.
 
 Rules:
 - Follow the tone instruction strictly
+- Stay focused on the topic provided
 - Tweet 1: Bold attention-grabbing hook
 - Tweets 2-4: One sharp insight per tweet about carbon markets or Reoxide
 - Tweet 5: Strong CTA — follow, invest, or join the waitlist
